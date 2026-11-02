@@ -21,5 +21,12 @@ Requires:
 - Can text the list to a user
 - User can text the program -- SMS is a console
 
+IMPORTANT & URGENT: Store List, Update List, Get List via phone
+NOT IMPORTANT & URGENT: Lists can be searched and sorted; the whole list can be shown, including items not needed to be shown
+IMPORTANT & NOT URGENT: Other users can update one greater list
+NOT IMPORTANT & NOT URGENT: Access via a website, visual aids
+
 # MVP
-User can access the shopping list from their phone via SMS and update it via SMS. User can also specify a recurring time and date to display, or upon request.
+User can access the shopping list from their phone via SMS and update it via SMS. User can also specify a recurring time and date to display it, or request it.
+
+<img width="567" height="352" alt="SMSShopping drawio(1)" src="https://github.com/user-attachments/assets/1114d4d3-d100-4642-8018-c113c12a0c57" />
