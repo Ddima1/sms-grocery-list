@@ -13,7 +13,7 @@ public class testDriver {
         host.setGroceries(groceries);
 
         for (Item item : host.getGroceries()) {
-            IO.println("Item: " + item.getName() + ", Quantity: " + item.getQuantity() + ", Status: " + item.isStatus());
+            IO.println("Item: " + item.getName() + ", Quantity: " + item.getQuantity() + ", Status: " + item.getStatus());
         }
     }
 }
