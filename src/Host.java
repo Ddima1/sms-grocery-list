@@ -5,6 +5,10 @@ import java.time.ZonedDateTime;
 
 public class Host implements Runnable{
     private List<Item> groceries = new ArrayList<Item>();
+    private ZonedDateTime dateTime = ZonedDateTime.now();
+    private Calendar userCalendar = Calendar.getInstance();
+    private boolean useTimeFunction = true;
+    private boolean running = true;
 
     public List<Item> getGroceries() {
         return groceries;
