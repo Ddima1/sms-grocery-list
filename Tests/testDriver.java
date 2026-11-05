@@ -15,7 +15,7 @@ public class testDriver {
         for (Item item : host.getGroceries()) {
             IO.println("Item: " + item.getName() + ", Quantity: " + item.getQuantity() + ", Status: " + item.getStatus());
         }
-        
+
         Thread hostThread = new Thread(host);
         hostThread.start();
     }
