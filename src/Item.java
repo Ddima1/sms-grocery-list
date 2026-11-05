@@ -55,4 +55,19 @@ public class Item {
     public void setStatus(boolean status) {
         this.status = status;
     }
+
+    @Override
+    public String toString() {
+        return "Item{" +
+                "name='" + name + '\'' +
+                ", quantity=" + quantity +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if(o instanceof Item item)
+            return quantity == item.quantity && name.equals(item.name);
+        return false;
+    }
 }
