@@ -48,7 +48,7 @@ public class Item {
         }
     }
 
-    public boolean isStatus() {
+    public boolean getStatus() {
         return status;
     }
 
