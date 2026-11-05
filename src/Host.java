@@ -14,6 +14,75 @@ public class Host implements Runnable{
         return groceries;
     }
 
+    public Packet parsePacket(Packet packet) {
+        ArrayList<String> argsReturn = new ArrayList<String>();
+        switch (packet.CMD) {
+            case 1: // Get items
+                for (Item item : groceries) {
+                    if (!item.getStatus()) {
+                        argsReturn.add("Item: " + item.getName());
+                    }
+                }
+                if(argsReturn.isEmpty()) {
+                    argsReturn.add("SUCCESSFUL: NO ITEMS TO SHOW");
+                }
+                break;
+            case 2: // Add item
+                if (packet.args.length >= 2) {
+                    String name = packet.args[0];
+                    int quantity = Integer.parseInt(packet.args[1]);
+                    addGroceries(new Item(name, quantity));
+                    argsReturn.add("SUCCESS");
+                } else {
+                    argsReturn.add("FAILED");
+                }
+                break;
+            case 3: // Update item quantity
+                if (packet.args.length >= 2) {
+                    String name = packet.args[0];
+                    int quantity = Integer.parseInt(packet.args[1]);
+                    for (Item item : groceries) {
+                        if (item.getName().equalsIgnoreCase(name)) {
+                            item.setQuantity(quantity);
+                            argsReturn.add("SUCCESS");
+                            break;
+                        }
+                    }
+                } else {
+                    argsReturn.add("FAILED");
+                }
+
+                break;
+            case 4: // Remove item
+                if (packet.args.length >= 1) {
+                    String name = packet.args[0];
+                    groceries.removeIf(item -> item.getName().equalsIgnoreCase(name));
+                    argsReturn.add("SUCCESS");
+                } else {
+                    argsReturn.add("FAILED");
+                }
+                break;
+            case 5: // set useTimeFunction
+                if (packet.args.length >= 1) {
+                    useTimeFunction = Boolean.parseBoolean(packet.args[0]);
+                    argsReturn.add("SUCCESS");
+                } else {
+                    argsReturn.add("FAILED");
+                }
+                break;
+            case 6: // Update Date/Time
+                if (packet.args.length >= 1) {
+                    setDateTime(packet.args);
+                    argsReturn.add("SUCCESS");
+                } else {
+                    argsReturn.add("FAILED");
+                }
+                break;
+            default:
+                throw new BadPacketException("Unknown command: " + packet.CMD + " ID: " + packet.ID + " Args: " + String.join(", ", packet.args));
+        }
+        return new Packet(argsReturn.toArray(new String[0]));
+    }
     public void addGroceries(Object grocery) {
         if(grocery instanceof Item e)
             this.groceries.add(e);
