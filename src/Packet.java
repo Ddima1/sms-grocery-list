@@ -9,4 +9,10 @@ public class Packet {
         this.CMD = CMD;
         this.args = args;
     }
+
+    public Packet(String[] args) {
+        this.ID = nextID++;
+        this.CMD = -1;
+        this.args = args;
+    }
 }
