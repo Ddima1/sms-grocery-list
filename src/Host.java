@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class Host {
+public class Host implements Runnable{
     private List<Item> groceries = new ArrayList<Item>();
 
     public List<Item> getGroceries() {
