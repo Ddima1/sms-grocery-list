@@ -1,7 +1,7 @@
 public class Item {
     private String name;
     private int quantity;
-    private boolean status = false;
+    private boolean inStock = false;
 
     public Item(String name, int quantity) {
         this.name = name;
@@ -28,9 +28,9 @@ public class Item {
 
     private void updateStatus() {
         if(this.quantity == 0){
-            this.status = true;
+            this.inStock = false;
         } else {
-            this.status = false;
+            this.inStock = true;
         }
     }
 
@@ -48,20 +48,18 @@ public class Item {
         }
     }
 
-    public boolean getStatus() {
-        return status;
+    public boolean getInStock() {
+        this.updateStatus();
+        return inStock;
     }
 
-    public void setStatus(boolean status) {
-        this.status = status;
+    public void setInStock(boolean inStock) {
+        this.inStock = inStock;
     }
 
     @Override
     public String toString() {
-        return "Item{" +
-                "name='" + name + '\'' +
-                ", quantity=" + quantity +
-                '}';
+        return name.toLowerCase();
     }
 
     @Override

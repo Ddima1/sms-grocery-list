@@ -1,4 +1,16 @@
-package PACKAGE_NAME;
+public class Client implements Runnable{
+    public void main(String[] args) {
+        Client client = new Client();
+        Thread clientThread = new Thread(client);
+        clientThread.start();
 
-public class Client {
+        Host host = new Host();
+        Thread hostThread = new Thread(host);
+        hostThread.start();
+    }
+
+    @Override
+    public void run() {
+        // Client implementation
+    }
 }

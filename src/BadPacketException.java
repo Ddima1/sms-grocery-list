@@ -1,7 +1,6 @@
-package PACKAGE_NAME;
-
 public class BadPacketException extends RuntimeException {
-  public BadPacketException(String message) {
-    super(message);
-  }
+    public BadPacketException(){}
+    public BadPacketException(String message) {
+        super(message);
+    }
 }

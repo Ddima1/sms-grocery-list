@@ -1,6 +1,7 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Calendar;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.*;
 import java.time.ZonedDateTime;
 
 public class Host implements Runnable{
@@ -10,6 +11,8 @@ public class Host implements Runnable{
     private boolean useTimeFunction = true;
     private boolean running = true;
 
+    private Thread timeThread;
+
     public List<Item> getGroceries() {
         return groceries;
     }
@@ -17,16 +20,26 @@ public class Host implements Runnable{
     public Packet parsePacket(Packet packet) {
         ArrayList<String> argsReturn = new ArrayList<String>();
         switch (packet.CMD) {
-            case 1: // Get items
+            case 0: // End
+                running = false;
+                timeThread.interrupt();
+            case 1: { // Get items
+                List<String> needed = new ArrayList<>();
                 for (Item item : groceries) {
-                    if (!item.getStatus()) {
-                        argsReturn.add("Item: " + item.getName());
+                    if (!item.getInStock()) {
+                        needed.add(item.toString());
                     }
                 }
-                if(argsReturn.isEmpty()) {
-                    argsReturn.add("SUCCESSFUL: NO ITEMS TO SHOW");
+
+                if (needed.isEmpty()) {
+                    argsReturn.add("You don't need to buy anything! Maybe you should treat yourself!");
+                    // Old: SUCCESSFUL: NO ITEMS TO SHOW
+                } else {
+                    argsReturn.add("Reminding you to buy: " + String.join(", ", needed) + ".");
+                    // Old: "Item: " + item.getName()
                 }
                 break;
+            }
             case 2: // Add item
                 if (packet.args.length >= 2) {
                     String name = packet.args[0];
@@ -169,31 +182,135 @@ public class Host implements Runnable{
     @Override
     public void run() {
         String[] args = null;
-        IO.println("SMS-GROCERY-LIST V0.3 BY VINNIE DI MAIO TEST BUILD\n");
+        IO.println("SMS-GROCERY-LIST V0.3 BY VINCENT DIMAIO TEST BUILD\n");
 
         int parseCMD = -1;
         String parseArgs = null;
-        while(useTimeFunction){
-            dateTime = ZonedDateTime.now();
-
-            if(dateTime.equals(userCalendar)) {
-                parsePacket(new Packet(1, new String[]{}));
-            }
-        }
 
         while(running){
-            String input = IO.readln("\n");
+            String input = IO.readln("INPUT:\n");
+            StringBuilder tempString = new StringBuilder();
+            Packet pongPacket = null;
             if(!input.isEmpty()){
-                args = input.split(" ");
-                Packet packet = new Packet(args);
+                args = interpretInput(input);
+                int cmdArg = Integer.parseInt(args[0]);
+                for(int i = 1; i < args.length; i++){
+                    tempString.append(args[i]).append(",");
+                }
+                args = tempString.toString().split(",");
+                Packet packet = new Packet(cmdArg, args);
                 // add functionality to check user args against dictionary for command and args
                 // for now args[0] is command args[1-...n] are args
                 try{
-                    parsePacket(packet);
+                    pongPacket = parsePacket(packet);
+                    // pongPacket will be in the future received by the client
+                    // exists this way for testing at the moment
+                    for(String arg : pongPacket.args){
+                        IO.print(arg + " | ");
+                    }
+                    IO.println("END OF LINE");
                 } catch (BadPacketException e) {
                     IO.println(e.getMessage());
                 }
             }
+
+            if (useTimeFunction && (timeThread == null || !timeThread.isAlive())) {
+                startTimeThread();
+            }
         }
+    }
+
+    private void startTimeThread() {
+        timeThread = new Thread(() -> {
+            while (running && useTimeFunction) {
+                dateTime = ZonedDateTime.now();
+                ZonedDateTime target = userCalendar.toInstant().atZone(userCalendar.getTimeZone().toZoneId());
+                if (target != null) {
+                    parsePacket(new Packet(1, new String[]{}));
+                }
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+        });
+        timeThread.start();
+    }
+    private String[] interpretInput(String input){
+        input = input.toUpperCase();
+        String[] dictionaryEnd = {"STOP", "KILL", "END"};
+        String[] dictionaryGet = {"GET", "SHOW", "SEE", "GIVE"};
+        String[] dictionaryAdd = {"ADD", "REMIND", "BUY", "PURCHASE", "ORDER"};
+        String[] dictionaryUpdate = {"UPDATE", "PURCHASED", "BOUGHT", "ORDERED", "HAVE"};
+        String[] dictionaryRemove = {"REMOVE", "DELETE", "FORGET", "IGNORE"};
+
+        ArrayList<String> foodList = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader("Src/FoodList.txt"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                foodList.add(line);
+            }
+            foodList.sort(null);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        int command = -1;
+        String item = "";
+        int quantity = -1;
+
+        ArrayList<String> args = new ArrayList<>(Arrays.asList(input.toUpperCase().split(" ")));
+        args.sort(null);
+
+        for(String arg : args){
+            if(Arrays.asList(dictionaryEnd).contains(arg)){
+                command = 0;
+                break;
+            } else if (Arrays.asList(dictionaryGet).contains(arg)) {
+                command = 1;
+                break;
+            } else if (Arrays.asList(dictionaryAdd).contains(arg)) {
+                command = 2;
+                break;
+            } else if (Arrays.asList(dictionaryUpdate).contains(arg)) {
+                command = 3;
+                break;
+            } else if (Arrays.asList(dictionaryRemove).contains(arg)) {
+                command = 4;
+                break;
+            }
+        }
+
+        int indexItem = -1;
+        if(command > 1){
+            for(String food : foodList){
+                indexItem = Arrays.binarySearch(args.toArray(new String[0]), food);
+                if(indexItem >= 0){
+                    item = food;
+                    break;
+                }
+            }
+        }
+
+        if(command == 4){
+            args.set(indexItem-1, "0");
+        }
+
+        String[] argsReturn = new String[3];
+
+        argsReturn[0] = Integer.toString(command);
+        if(!item.isEmpty()){
+            argsReturn[2] = args.get(indexItem-1);
+            argsReturn[1] = args.get(indexItem);
+            try{
+                Integer.parseInt(argsReturn[1]); // Way to ensure that arg[1] is actually, in fact, an integer
+            } catch (NumberFormatException e){
+                argsReturn[2] = "0";
+            }
+        }
+
+        return argsReturn;
     }
 }

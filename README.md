@@ -13,8 +13,8 @@ Requires:
 - AgentMail is a free email API. Will use SMS to email conversion.
 
 ## DEVELOPMENT PLAN
-- Outputs a list with an item and quantity/status
-- Can update an item status
+- Outputs a list with an item and quantity/inStock
+- Can update an item inStock
 - Can add/remove items from a list
 - Can output the list at a pre-programmed time and date
 - Can update the output time and date
