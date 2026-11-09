@@ -1,9 +1,5 @@
 public class Client implements Runnable{
     private Host host = null;
-    private final String ACCOUNT_SID = System.getenv("TWILIO_ACCOUNT_SID");
-    private final String AUTH_TOKEN = System.getenv("TWILIO_AUTH_TOKEN");
-    public static final String TWILIO_NUMBER = System.getenv("TWILIO_PHONE_NUMBER");
-
     public void main(String[] args) {
         Client client = new Client();
         Thread clientThread = new Thread(client);
