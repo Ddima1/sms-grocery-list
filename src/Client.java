@@ -47,20 +47,7 @@ public class Client implements Runnable{
                 messageBody
         ).create();
 
-        try {
-            Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress("smsgateway251@gmail.com"));
-
-            // Format: [Target Number]@[Carrier Gateway]
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse("4023057041@tmomail.net"));
-            message.setSubject("");
-            message.setText(messageBody);
-
-            Transport.send(message);
-            IO.println("SMS sent successfully!");
-        } catch (MessagingException e) {
-            e.printStackTrace();
-        }
+        IO.println("SID: " + message.getSid());
     }
 
     private String receiveSMS() {
