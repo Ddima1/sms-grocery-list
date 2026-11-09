@@ -1,3 +1,7 @@
+import jakarta.mail.*;
+import jakarta.mail.internet.*;
+import java.util.Properties;
+
 public class Client implements Runnable{
     public void main(String[] args) {
         Client client = new Client();
