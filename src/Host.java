@@ -193,7 +193,8 @@ public class Host implements Runnable{
         String parseArgs = null;
 
         while(running){
-            String input = IO.readln("\nAwaiting User Input:\n");
+            //String input = IO.readln("\nAwaiting User Input:\n");
+            String input = userMessage;
             StringBuilder tempString = new StringBuilder();
             Packet pongPacket = null;
             if(!input.isEmpty()){
