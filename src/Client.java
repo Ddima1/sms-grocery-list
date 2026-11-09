@@ -23,11 +23,22 @@ public class Client implements Runnable{
         sendSMS("Welcome to SMS-Grocery List! This is version 0.8, so there may be bugs!");
         if(host != null){
             while(host.getStaus()){
-                String receivedMessage = receiveSMS();
-                if(!receivedMessage.isEmpty()){
-                    host.parseText(receivedMessage);
-                    receivedMessage = "";
+                try{
+                    String receivedMessage = receiveSMS();
+                    if(!receivedMessage.isEmpty()){
+                        host.parseText(receivedMessage);
+                        receivedMessage = "";
+                    }
+                } catch (Exception e){
+                    String s = "";
+                    try{
+                        s = e.getMessage();
+                    } catch (NullPointerException _){}
+                    if(s != null && !s.isEmpty()){
+                        sendSMS(s);
+                    }
                 }
+
             }
         }
     }
