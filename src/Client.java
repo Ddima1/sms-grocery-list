@@ -14,8 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Controller
 public class Client implements Runnable{
     private Host host = null;
-    private final String ACCOUNT_SID = "SKbf79d97bff5b0ae95170a62e53419e24";
-    private final String AUTH_TOKEN = "d3234b312405873cd68cbe34ac9e6b5d";
+    private final String ACCOUNT_SID = System.getenv("TWILIO_ACCOUNT_SID");
+    private final String AUTH_TOKEN = System.getenv("TWILIO_AUTH_TOKEN");
+    public static final String TWILIO_NUMBER = System.getenv("TWILIO_PHONE_NUMBER");
 
     public void main(String[] args) {
         Client client = new Client();
