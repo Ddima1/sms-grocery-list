@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Controller
 public class Client implements Runnable{
     private Host host = null;
     private final String ACCOUNT_SID = "SKbf79d97bff5b0ae95170a62e53419e24";
