@@ -27,11 +27,13 @@ public class Client implements Runnable{
     @Override
     public void run() {
         sendSMS("Welcome to SMS-Grocery List! This is version 0.8, so there may be bugs!");
-        while(host.getStaus()){
-            String receivedMessage = receiveSMS();
-            if(!receivedMessage.isEmpty()){
-                host.parseText(receivedMessage);
-                receivedMessage = "";
+        if(host != null){
+            while(host.getStaus()){
+                String receivedMessage = receiveSMS();
+                if(!receivedMessage.isEmpty()){
+                    host.parseText(receivedMessage);
+                    receivedMessage = "";
+                }
             }
         }
     }
