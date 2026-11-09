@@ -57,4 +57,57 @@ public class Client implements Runnable{
             e.printStackTrace();
         }
     }
+
+    private String receiveSMS() {
+        final String host = "imap.gmail.com";
+        final String username = "smsgateway251@gmail.com";
+        final String password = "wvxb lixk xpic duki";
+
+        String returnMessage = null;
+
+        try {
+            Properties properties = new Properties();
+            properties.put("mail.imap.host", host);
+            properties.put("mail.imap.port", "993");
+            properties.put("mail.imap.ssl.enable", "true");
+
+            Session emailSession = Session.getInstance(properties);
+            Store store = emailSession.getStore("imap");
+            store.connect(host, username, password);
+
+            Folder inbox = store.getFolder("INBOX");
+            inbox.open(Folder.READ_WRITE);
+
+            jakarta.mail.search.FlagTerm unreadTerm = new jakarta.mail.search.FlagTerm(
+                    new Flags(Flags.Flag.SEEN), false
+            );
+            Message[] messages = inbox.search(unreadTerm);
+
+            //IO.println("Scanning inbox for new SMS replies...");
+
+            for (Message msg : messages) {
+                String from = msg.getFrom()[0].toString();
+
+                if (from.contains("@tmomail.net") || from.contains("@vtext.com") || from.contains("@txt.att.net")) {
+                    IO.println("--- New SMS Received ---");
+                    IO.println("From Mobile Number: " + from);
+                    IO.println("Message Content: " + msg.getContent().toString().trim());
+                    returnMessage = msg.getContent().toString().trim();
+
+                    msg.setFlag(Flags.Flag.SEEN, true);
+
+                }
+            }
+
+            inbox.close(false);
+            store.close();
+
+        } catch (Exception e) {
+            //e.printStackTrace();
+            throw new BadMessageException("Failed to parse message");
+        }
+
+        return returnMessage;
+    }
+
 }
