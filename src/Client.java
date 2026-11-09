@@ -2,13 +2,6 @@ import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
-
-@Controller
 public class Client implements Runnable{
     private Host host = null;
     private final String ACCOUNT_SID = System.getenv("TWILIO_ACCOUNT_SID");
