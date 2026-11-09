@@ -187,7 +187,7 @@ public class Host implements Runnable{
     @Override
     public void run() {
         String[] args = null;
-        IO.println("SMS-GROCERY-LIST V0.5 BY VINCENT DIMAIO TEST BUILD\n");
+        IO.println("SMS-GROCERY-LIST V0.8 BY VINCENT DIMAIO TEST BUILD\n");
 
         int parseCMD = -1;
         String parseArgs = null;
