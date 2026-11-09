@@ -21,6 +21,7 @@ public class Host implements Runnable{
         ArrayList<String> argsReturn = new ArrayList<String>();
         switch (packet.CMD) {
             case 0: // End
+                IO.println("Goodbye!");
                 running = false;
                 timeThread.interrupt();
             case 1: { // Get items
@@ -45,9 +46,9 @@ public class Host implements Runnable{
                     String name = packet.args[0];
                     int quantity = Integer.parseInt(packet.args[1]);
                     addGroceries(new Item(name, quantity));
-                    argsReturn.add("SUCCESS");
+                    argsReturn.add("I added " + name + " to your list!");
                 } else {
-                    argsReturn.add("FAILED");
+                    argsReturn.add("Unable to add item! Check your spelling!");
                 }
                 break;
             case 3: // Update item quantity
@@ -57,12 +58,12 @@ public class Host implements Runnable{
                     for (Item item : groceries) {
                         if (item.getName().equalsIgnoreCase(name)) {
                             item.setQuantity(quantity);
-                            argsReturn.add("SUCCESS");
+                            argsReturn.add("Set " + name +"'s quantity to "+ quantity);
                             break;
                         }
                     }
                 } else {
-                    argsReturn.add("FAILED");
+                    argsReturn.add("Unable to update! Try adding the item to your list first!");
                 }
 
                 break;
@@ -70,25 +71,25 @@ public class Host implements Runnable{
                 if (packet.args.length >= 1) {
                     String name = packet.args[0];
                     groceries.removeIf(item -> item.getName().equalsIgnoreCase(name));
-                    argsReturn.add("SUCCESS");
+                    argsReturn.add("Removed " + name + " from your list!");
                 } else {
-                    argsReturn.add("FAILED");
+                    argsReturn.add("Failed to remove item. Maybe the item is already removed.");
                 }
                 break;
             case 5: // set useTimeFunction
                 if (packet.args.length >= 1) {
                     useTimeFunction = Boolean.parseBoolean(packet.args[0]);
-                    argsReturn.add("SUCCESS");
+                    argsReturn.add("You will now be reminded periodically!");
                 } else {
-                    argsReturn.add("FAILED");
+                    argsReturn.add("Failed to run the command.");
                 }
                 break;
             case 6: // Update Date/Time
                 if (packet.args.length >= 1) {
                     setDateTime(packet.args);
-                    argsReturn.add("SUCCESS");
+                    argsReturn.add("You will now be reminded on + " + packet.args[0]);
                 } else {
-                    argsReturn.add("FAILED");
+                    argsReturn.add("Failed to run the command. Check your date format.");
                 }
                 break;
             default:
@@ -182,13 +183,13 @@ public class Host implements Runnable{
     @Override
     public void run() {
         String[] args = null;
-        IO.println("SMS-GROCERY-LIST V0.3 BY VINCENT DIMAIO TEST BUILD\n");
+        IO.println("SMS-GROCERY-LIST V0.5 BY VINCENT DIMAIO TEST BUILD\n");
 
         int parseCMD = -1;
         String parseArgs = null;
 
         while(running){
-            String input = IO.readln("INPUT:\n");
+            String input = IO.readln("\nAwaiting User Input:\n");
             StringBuilder tempString = new StringBuilder();
             Packet pongPacket = null;
             if(!input.isEmpty()){
@@ -206,9 +207,9 @@ public class Host implements Runnable{
                     // pongPacket will be in the future received by the client
                     // exists this way for testing at the moment
                     for(String arg : pongPacket.args){
-                        IO.print(arg + " | ");
+                        IO.print(arg);
                     }
-                    IO.println("END OF LINE");
+                    //IO.println("END OF LINE");
                 } catch (BadPacketException e) {
                     IO.println(e.getMessage());
                 }
@@ -237,13 +238,14 @@ public class Host implements Runnable{
         });
         timeThread.start();
     }
+
     private String[] interpretInput(String input){
         input = input.toUpperCase();
         String[] dictionaryEnd = {"STOP", "KILL", "END"};
-        String[] dictionaryGet = {"GET", "SHOW", "SEE", "GIVE"};
+        String[] dictionaryGet = {"GET", "SHOW", "SEE", "GIVE", "WHAT"};
         String[] dictionaryAdd = {"ADD", "REMIND", "BUY", "PURCHASE", "ORDER"};
         String[] dictionaryUpdate = {"UPDATE", "PURCHASED", "BOUGHT", "ORDERED", "HAVE"};
-        String[] dictionaryRemove = {"REMOVE", "DELETE", "FORGET", "IGNORE"};
+        String[] dictionaryRemove = {"REMOVE", "DELETE", "FORGET", "IGNORE", "DONT"};
 
         ArrayList<String> foodList = new ArrayList<>();
 
@@ -262,7 +264,6 @@ public class Host implements Runnable{
         int quantity = -1;
 
         ArrayList<String> args = new ArrayList<>(Arrays.asList(input.toUpperCase().split(" ")));
-        args.sort(null);
 
         for(String arg : args){
             if(Arrays.asList(dictionaryEnd).contains(arg)){
@@ -284,30 +285,27 @@ public class Host implements Runnable{
         }
 
         int indexItem = -1;
-        if(command > 1){
-            for(String food : foodList){
-                indexItem = Arrays.binarySearch(args.toArray(new String[0]), food);
-                if(indexItem >= 0){
-                    item = food;
+        if (command > 1) {
+            for (int i = 0; i < args.size(); i++) {
+                if (foodList.contains(args.get(i))) {
+                    item = args.get(i);
+                    indexItem = i;
                     break;
                 }
             }
         }
 
-        if(command == 4){
-            args.set(indexItem-1, "0");
-        }
+        String[] argsReturn = {Integer.toString(command), item, "0"};
 
-        String[] argsReturn = new String[3];
-
-        argsReturn[0] = Integer.toString(command);
-        if(!item.isEmpty()){
-            argsReturn[2] = args.get(indexItem-1);
-            argsReturn[1] = args.get(indexItem);
-            try{
-                Integer.parseInt(argsReturn[1]); // Way to ensure that arg[1] is actually, in fact, an integer
-            } catch (NumberFormatException e){
-                argsReturn[2] = "0";
+        if (!item.isEmpty() && command != 4) {
+            for (int j : new int[]{indexItem - 1, indexItem + 1}) { // checks before and after the food buzzword
+                if (j >= 0 && j < args.size()) {
+                    try {
+                        Integer.parseInt(args.get(j)); // way of ensuring the packet won't cause an error later
+                        argsReturn[2] = args.get(j);
+                        break;
+                    } catch (NumberFormatException _) {}
+                }
             }
         }
 
