@@ -243,7 +243,6 @@ public class Host implements Runnable{
         });
         timeThread.start();
     }
-
     private String[] interpretInput(String input){
         input = input.toUpperCase();
         String[] dictionaryEnd = {"STOP", "KILL", "END"};
