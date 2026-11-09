@@ -39,14 +39,7 @@ public class Client implements Runnable{
     }
 
     private void sendSMS(String messageBody) {
-        final String username = "smsgateway251@gmail.com";
-        final String password = "wvxb lixk xpic duki";
-
-        Properties emailProperties = new Properties();
-        emailProperties.put("mail.smtp.host", "smtp.gmail.com");
-        emailProperties.put("mail.smtp.port", "587");
-        emailProperties.put("mail.smtp.auth", "true");
-        emailProperties.put("mail.smtp.starttls.enable", "true");
+        Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
 
         Session session = Session.getInstance(emailProperties, new Authenticator() {
             @Override
