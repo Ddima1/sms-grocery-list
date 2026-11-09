@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 public class Client implements Runnable{
+    private Host host = null;
+    private final String ACCOUNT_SID = "SKbf79d97bff5b0ae95170a62e53419e24";
+    private final String AUTH_TOKEN = "d3234b312405873cd68cbe34ac9e6b5d";
+
     public void main(String[] args) {
         Client client = new Client();
         Thread clientThread = new Thread(client);
