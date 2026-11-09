@@ -19,7 +19,7 @@ public class Client implements Runnable{
         Thread clientThread = new Thread(client);
         clientThread.start();
 
-        Host host = new Host();
+        host = new Host();
         Thread hostThread = new Thread(host);
         hostThread.start();
     }
