@@ -179,6 +179,10 @@ public class Host implements Runnable{
 
         userCalendar.set(year, month, day, hour, minute);
     }
+    public boolean getStaus(){return running;}
+    public void parseText(String input){
+        userMessage = input;
+    }
 
     @Override
     public void run() {
