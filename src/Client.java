@@ -53,6 +53,8 @@ public class Client implements Runnable{
         IO.println("SID: " + message.getSid());
     }
 
+    @ResponseBody
+    @PostMapping(value = "/receive-sms")
     private String receiveSMS() {
         final String host = "imap.gmail.com";
         final String username = "smsgateway251@gmail.com";
