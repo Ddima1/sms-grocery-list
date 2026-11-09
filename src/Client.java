@@ -41,12 +41,11 @@ public class Client implements Runnable{
     private void sendSMS(String messageBody) {
         Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
 
-        Session session = Session.getInstance(emailProperties, new Authenticator() {
-            @Override
-            protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(username, password);
-            }
-        });
+        Message message = Message.creator(
+                new PhoneNumber("+15312108112"),  // Recipient's phone number (E.164 format)
+                new PhoneNumber("+15017122661"),
+                messageBody
+        ).create();
 
         try {
             Message message = new MimeMessage(session);
