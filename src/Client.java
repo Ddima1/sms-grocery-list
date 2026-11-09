@@ -1,6 +1,6 @@
-import jakarta.mail.*;
-import jakarta.mail.internet.*;
-import java.util.Properties;
+import com.twilio.Twilio;
+import com.twilio.rest.api.v2010.account.Message;
+import com.twilio.type.PhoneNumber;
 
 public class Client implements Runnable{
     public void main(String[] args) {
