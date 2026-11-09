@@ -10,6 +10,7 @@ public class Host implements Runnable{
     private Calendar userCalendar = Calendar.getInstance();
     private boolean useTimeFunction = true;
     private boolean running = true;
+    private String userMessage;
 
     private Thread timeThread;
 
