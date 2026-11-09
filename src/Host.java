@@ -198,7 +198,7 @@ public class Host implements Runnable{
             String input = userMessage;
             StringBuilder tempString = new StringBuilder();
             Packet pongPacket = null;
-            if(!input.isEmpty()){
+            if(input != null && !input.isEmpty()){
                 args = interpretInput(input);
                 int cmdArg = Integer.parseInt(args[0]);
                 for(int i = 1; i < args.length; i++){
@@ -316,5 +316,4 @@ public class Host implements Runnable{
 
         return argsReturn;
     }
-
 }
