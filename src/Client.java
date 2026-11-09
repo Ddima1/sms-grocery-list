@@ -47,7 +47,7 @@ public class Client implements Runnable{
 
         Message message = Message.creator(
                 new PhoneNumber("+15312108112"),  // Recipient's phone number (E.164 format)
-                new PhoneNumber("+15017122661"),
+                new PhoneNumber(TWILIO_NUMBER),
                 messageBody
         ).create();
 
