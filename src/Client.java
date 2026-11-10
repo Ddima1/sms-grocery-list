@@ -1,3 +1,10 @@
+import java.io.IOException;
+import java.net.ConnectException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
 public class Client implements Runnable{
     private static final Host host = new Host();
     private final String ENDPOINT = "http://127.0.0";

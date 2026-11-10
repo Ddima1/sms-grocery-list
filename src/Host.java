@@ -14,6 +14,36 @@ public class Host implements Runnable{
 
     private Thread timeThread;
 
+    public Host(){
+        launchPythonSidecar();
+    }
+
+    private void launchPythonSidecar() {
+        // Directory is found this way since putting the directory in straight caused bugs
+        String directory = System.getProperty("user.dir");
+        String pythonPath = directory + File.separator + "Src" + File.separator
+                + "textnow_gateway" + File.separator + "textnowGateway.py";
+
+        ProcessBuilder processBuilder = new ProcessBuilder("python", pythonPath);
+        try {
+            processBuilder.inheritIO();
+            Process pythonProcess = processBuilder.start();
+
+            // Ensures python is killed at the same time of java process
+            Runtime.getRuntime().addShutdownHook(new Thread(pythonProcess::destroy));
+
+            Thread.sleep(2500); // Python is slow to connect :/
+
+        } catch (IOException e){
+            IO.println("Fatal Error: Unable to locate python file: textnowGateway.py, ensure the file directory is correct!");
+        } catch (InterruptedException e){
+            Thread.currentThread().interrupt();
+        } catch (Exception e){
+            throw new SidecarException("Other error with Sidecar.");
+        }
+
+    }
+
     public List<Item> getGroceries() {
         return groceries;
     }
