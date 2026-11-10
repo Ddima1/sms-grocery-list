@@ -33,7 +33,11 @@ public class Client implements Runnable{
                         s = e.getMessage();
                     } catch (NullPointerException _){}
                     if(s != null && !s.isEmpty()){
-                        sendSMS(s);
+                        try {
+                            sendSMS(s);
+                        } catch (IOException | InterruptedException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
                 }
 
