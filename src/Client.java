@@ -1,7 +1,10 @@
 public class Client implements Runnable{
-    private Host host = null;
-
-    public void main(String[] args) {
+    private static final Host host = new Host();
+    private final String ENDPOINT = "http://127.0.0";
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private String recipient = "+15312108112";
+    
+    public static void main(String[] args) {
         Client client = new Client();
         Thread clientThread = new Thread(client);
         clientThread.start();
