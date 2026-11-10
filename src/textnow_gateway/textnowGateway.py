@@ -22,7 +22,8 @@ except Exception as e:
     # print(f"Authentication failed: {e}")
     client = None
 
-processedMessageIDs = set()
+processed_message_ids = set()
+message_queue = []
 
 @app.route('/send', methods=['POST'])
 def send_sms():
