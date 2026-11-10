@@ -25,6 +25,13 @@ except Exception as e:
 processed_message_ids = set()
 message_queue = []
 
+@app.route('/get-next-sms', methods=['GET'])
+def get_next_sms():
+    if len(message_queue) > 0:
+        latest_text = message_queue.pop(0)  #  shifts the queue
+        return jsonify({"body": latest_text})
+    return jsonify({"body": ""})
+
 @app.route('/send', methods=['POST'])
 def send_sms():
     if not client: # Checks connection to TextNow host
