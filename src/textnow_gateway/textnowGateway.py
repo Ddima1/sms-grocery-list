@@ -6,21 +6,49 @@
 
 import time
 import os
+from pythontextnow import Client
+from pythontextnow import ConversationService
+from pythontextnow.enum import MessageDirection
+from pythontextnow.model import TextMessage
 from threading import Thread
 from flask import Flask, request, jsonify
-import pytextnow
 
 app = Flask(__name__)
 
-USERNAME = os.environ.get("TEXTNOW_USERNAME")
-CONNECT_SID = os.environ.get("TEXTNOW_SID")
+USERNAME = os.environ.get("TEXTNOW_USERNAME", "").strip()
+CONNECT_SID = os.environ.get("TEXTNOW_SID", "").strip().replace('"', '').replace("'", "")
+RECIPIENT_PHONE = os.environ.get("MONICA", "").strip() # format +1XXXXXXXXXX
+
+
+POLLING_ENABLED = False # Switch to true in v1.x
+
+# Ensures python and java logs appear
+def log(*args):
+    print(*args, flush=True)
+
+client_ready = False
 
 try:
-    client = pytextnow.Client(USERNAME, sid=CONNECT_SID)
-    # print("Successfully authenticated with TextNow!")
+    log(f"Attempting initialization for user: {USERNAME}...")
+
+    if not USERNAME or not CONNECT_SID:
+        raise ValueError("TEXTNOW_USERNAME and/or TEXTNOW_SID environment variable is not set")
+
+    Client.set_client_config(username=USERNAME, sid_cookie=CONNECT_SID)
+    client_ready = True
+
+    log("Successfully authenticated with TextNow!")
 except Exception as e:
-    # print(f"Authentication failed: {e}")
-    client = None
+    log(f"Authentication failed during handshake step: {e}")
+    client_ready = False
+
+conversations = {}
+
+def get_conversation(phone_number):
+    if phone_number not in conversations:
+        conversations[phone_number] = ConversationService(conversation_phone_numbers=[phone_number])
+    return conversations[phone_number]
+
 
 processed_message_ids = set()
 message_queue = []
@@ -34,10 +62,10 @@ def get_next_sms():
 
 @app.route('/send', methods=['POST'])
 def send_sms():
-    if not client: # Checks connection to TextNow host
+    if not client_ready: # Checks connection to TextNow host
         return jsonify({"status": "error", "message": "TextNow client not initialized"}), 500
 
-    data = request.json # Gets JSON from client.java
+    data = request.get_json(silent=True) or {} # Gets JSON from client.java
     recipient = data.get("to") # Gets the recipient number
     message_text = data.get("body") # Gets the body of the message
 
@@ -45,11 +73,18 @@ def send_sms():
         return jsonify({"status": "error", "message": "Missing 'to' or 'body'"}), 400
 
     try:
-        client.send_sms(recipient, message_text) # Parses the message to TextMe then sends it to recipient
+        get_conversation(recipient).send_message(message=message_text) # Sends the message to recipient via TextNow
         return jsonify({"status": "success", "message": "SMS dispatched successfully"})
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        error_msg = str(e)
+        log(f"Error while sending SMS: {error_msg}")
 
+        if "403" in error_msg:
+            log("Detected 403 Forbidden. If this keeps happening, copy a fresh connect.sid from your browser.")
+        return jsonify({
+            "message": f"Could not send message. Internal script error: {error_msg}",
+            "status": "error"
+        }), 500
 
 
 def poll_incoming_messages():
@@ -76,5 +111,7 @@ def poll_incoming_messages():
             time.sleep(5)
 
 if __name__ == '__main__':
-    Thread(target=poll_incoming_messages, daemon=True).start()
-    app.run(host='127.0.0.1', port=5000)
+    if POLLING_ENABLED:
+        Thread(target=poll_incoming_messages, daemon=True).start()
+
+    app.run(host='127.0.0.1', port=5000, debug=False)
