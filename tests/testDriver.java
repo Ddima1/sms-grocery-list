@@ -1,9 +1,16 @@
+import Data.Item;
+import userconnection.Host;
+import userconnection.SmsResponseListener;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class testDriver {
     public static void main(String[] args) {
-        Host host = new Host();
+        Host host = new Host(new SmsResponseListener() {
+            @Override
+            public void onDataReceived(String data) {} // can stay null for this test
+        });
         List<Item> groceries = new ArrayList<Item>();
 
         groceries.add(new Item("Apples", 5));
@@ -13,8 +20,8 @@ public class testDriver {
         host.setGroceries(groceries);
 
         /*
-        for (Item item : host.getGroceries()) {
-            IO.println("Item: " + item.getName() + ", Quantity: " + item.getQuantity() + ", Status: " + item.getInStock());
+        for (Data.Item item : host.getGroceries()) {
+            IO.println("Data.Item: " + item.getName() + ", Quantity: " + item.getQuantity() + ", Status: " + item.getInStock());
         }
         */
 

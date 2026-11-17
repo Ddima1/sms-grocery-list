@@ -1,11 +1,19 @@
 import static org.junit.jupiter.api.Assertions.*;
+import Data.Item;
+import Data.Packet;
+import exceptions.BadPacketException;
+import userconnection.Host;
 import org.junit.jupiter.api.*;
+import userconnection.SmsResponseListener;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class PacketTest {
-    Host host = new Host();
+    Host host = new Host(new SmsResponseListener() {
+        @Override
+        public void onDataReceived(String data) {} // can stay null for this test
+    });
 
     @Test
     public void testPacketCreation() {
