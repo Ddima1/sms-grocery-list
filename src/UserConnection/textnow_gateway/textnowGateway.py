@@ -18,7 +18,8 @@ app = Flask(__name__)
 
 USERNAME = os.environ.get("TEXTNOW_USERNAME", "").strip()
 CONNECT_SID = os.environ.get("TEXTNOW_SID", "").strip().replace('"', '').replace("'", "")
-RECIPIENT_PHONE = os.environ.get("MONICA", "").strip() # format +1XXXXXXXXXX
+RECIPIENT_PHONE = os.environ.get("RECIPIENT_PHONE", "").strip() # format +1XXXXXXXXXX
+PORT = int(os.environ.get("PORT", "5000"))
 
 
 POLLING_ENABLED = True # Switch to true in v1.x
@@ -151,4 +152,4 @@ if __name__ == '__main__':
     if POLLING_ENABLED:
         Thread(target=poll_incoming_messages, daemon=True).start()
 
-    app.run(host='127.0.0.1', port=5000, debug=False)
+    app.run(host='127.0.0.1', port=PORT, debug=False)

@@ -14,40 +14,14 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Host implements Runnable{
-    private List<Item> groceries = new ArrayList<>();
-    private final SmsResponseListener listener;
+    private static List<Item> groceries = new ArrayList<>();
+    private final SmsResponseListener[] listeners;
     private boolean running = true;
     private volatile String userMessage;
+    private int userID = -1;
 
-    public Host(SmsResponseListener listener){
-        this.listener = listener;
-        launchPythonSidecar();
-    }
-
-    private void launchPythonSidecar() {
-        // Directory is found this way since putting the directory in straight caused bugs
-        String directory = System.getProperty("user.dir");
-        String pythonPath = directory + File.separator + "Src" + File.separator
-                + "userconnection/textnow_gateway" + File.separator + "textnowGateway.py";
-
-        ProcessBuilder processBuilder = new ProcessBuilder("python", pythonPath);
-        try {
-            processBuilder.inheritIO();
-            Process pythonProcess = processBuilder.start();
-
-            // Ensures python is killed at the same time of java process
-            Runtime.getRuntime().addShutdownHook(new Thread(pythonProcess::destroy));
-
-            Thread.sleep(2500); // Python is slow to connect :/
-
-        } catch (IOException e){
-            throw new SidecarException("Fatal Error: Unable to locate python file: textnowGateway.py, ensure the file directory is correct!");
-        } catch (InterruptedException e){
-            Thread.currentThread().interrupt();
-        } catch (Exception e){
-            throw new SidecarException("Other error with Sidecar.");
-        }
-
+    public Host(SmsResponseListener... listeners){
+        this.listeners = listeners;
     }
 
     public List<Item> getGroceries() {
@@ -120,20 +94,18 @@ public class Host implements Runnable{
     }
     public void addGroceries(Object grocery) {
         if(grocery instanceof Item e)
-            this.groceries.add(e);
-    }
-    public void setGroceries(List<Item> groceries) {
-        this.groceries = groceries;
+            groceries.add(e);
     }
     public boolean getStaus(){return running;}
-    public void parseText(String input){
-        userMessage = input;
+    public void parseText(Packet input) {
+        userID = Integer.parseInt(input.args[0]);
+        userMessage = input.args[1];
     }
 
     @Override
     public void run() {
         String[] args;
-        IO.println("SMS-GROCERY-LIST V1.0\n");
+        IO.println("[HOST ACTIVE]");
 
         while(running){
             //String input = IO.readln("\nAwaiting User Input:\n");
@@ -158,8 +130,8 @@ public class Host implements Runnable{
                     for(String arg : pongPacket.args){
                         argsToParse.append(arg);
                     }
-                    if (listener != null) {
-                        listener.onDataReceived(argsToParse.toString());
+                    if (listeners != null) {
+                        listeners[userID].onDataReceived(new Packet(argsToParse.toString()));
                     }
                     //IO.println("END OF LINE");
                 } catch (BadPacketException e) {
@@ -183,7 +155,7 @@ public class Host implements Runnable{
 
         ArrayList<String> foodList = new ArrayList<>();
 
-        try (BufferedReader br = new BufferedReader(new FileReader("Src/FoodList.txt"))) {
+        try (BufferedReader br = new BufferedReader(new FileReader("src/userconnection/FoodList.txt"))) {
             String line;
             while ((line = br.readLine()) != null) {
                 foodList.add(line);
@@ -243,5 +215,9 @@ public class Host implements Runnable{
         }
 
         return argsReturn;
+    }
+
+    public void setGroceries(List<Item> groceries) {
+        Host.groceries = groceries;
     }
 }

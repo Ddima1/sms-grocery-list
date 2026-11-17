@@ -12,7 +12,7 @@ import java.util.List;
 public class PacketTest {
     Host host = new Host(new SmsResponseListener() {
         @Override
-        public void onDataReceived(String data) {} // can stay null for this test
+        public void onDataReceived(Packet data) {} // can stay null for this test
     });
 
     @Test

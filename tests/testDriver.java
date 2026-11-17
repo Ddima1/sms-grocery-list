@@ -1,4 +1,5 @@
 import data.Item;
+import data.Packet;
 import userconnection.Host;
 import userconnection.SmsResponseListener;
 
@@ -9,7 +10,7 @@ public class testDriver {
     public static void main(String[] args) {
         Host host = new Host(new SmsResponseListener() {
             @Override
-            public void onDataReceived(String data) {} // can stay null for this test
+            public void onDataReceived(Packet data) {} // can stay null for this test
         });
         List<Item> groceries = new ArrayList<Item>();
 

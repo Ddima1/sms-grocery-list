@@ -1,5 +1,7 @@
 package userconnection;
 
+import data.Packet;
+
 public interface SmsResponseListener {
-    void onDataReceived(String data);
+    void onDataReceived(Packet data);
 }

@@ -17,4 +17,16 @@ public class Packet {
         this.CMD = -1;
         this.args = args;
     }
+
+    public Packet(String arg) {
+        this.ID = nextID++;
+        this.CMD = -1;
+        this.args = new String[]{arg};
+    }
+
+    public Packet(int userID, String arg) {
+        this.ID = nextID++;
+        this.CMD = -1;
+        this.args = new String[]{String.valueOf(userID), arg};
+    }
 }
