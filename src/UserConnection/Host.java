@@ -9,19 +9,15 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
-import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class Host implements Runnable{
-    private List<Item> groceries = new ArrayList<Item>();
-    private SmsResponseListener listener;
-    private ZonedDateTime dateTime = ZonedDateTime.now();
-    private Calendar userCalendar = Calendar.getInstance();
-    private boolean useTimeFunction = true;
+    private List<Item> groceries = new ArrayList<>();
+    private final SmsResponseListener listener;
     private boolean running = true;
     private volatile String userMessage;
-
-    private Thread timeThread;
 
     public Host(SmsResponseListener listener){
         this.listener = listener;
@@ -59,12 +55,11 @@ public class Host implements Runnable{
     }
 
     public Packet parsePacket(Packet packet) {
-        ArrayList<String> argsReturn = new ArrayList<String>();
+        ArrayList<String> argsReturn = new ArrayList<>();
         switch (packet.CMD) {
             case 0: // End
                 IO.println("Goodbye!");
                 running = false;
-                timeThread.interrupt();
                 break;
             case 1: { // Get items
                 List<String> needed = new ArrayList<>();
@@ -118,22 +113,6 @@ public class Host implements Runnable{
                     argsReturn.add("Failed to remove item. Maybe the item is already removed.");
                 }
                 break;
-            case 5: // set useTimeFunction
-                if (packet.args.length >= 1) {
-                    useTimeFunction = Boolean.parseBoolean(packet.args[0]);
-                    argsReturn.add("You will now be reminded periodically!");
-                } else {
-                    argsReturn.add("Failed to run the command.");
-                }
-                break;
-            case 6: // Update Date/Time
-                if (packet.args.length >= 1) {
-                    setDateTime(packet.args);
-                    argsReturn.add("You will now be reminded on + " + packet.args[0]);
-                } else {
-                    argsReturn.add("Failed to run the command. Check your date format.");
-                }
-                break;
             default:
                 throw new BadPacketException("Unknown command: " + packet.CMD + " ID: " + packet.ID + " Args: " + String.join(", ", packet.args));
         }
@@ -146,81 +125,6 @@ public class Host implements Runnable{
     public void setGroceries(List<Item> groceries) {
         this.groceries = groceries;
     }
-    public void setDateTime(String[] dtgArgs) {
-        int year = 0;
-        int month = 0;
-        int day = 0;
-        int hour = 0;
-        int minute = 0;
-        Character[] illegalChars = new Character[]{'-', '/', '\\', '.', ',', ';', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '=', '{', '}', '[', ']', '|', '<', '>', '?', '~'};
-
-        for (int i = 0; i < dtgArgs.length; i++) {
-            if(dtgArgs[i] == null) {
-                i++;
-            }
-            for(Character c : illegalChars) {
-                dtgArgs[i] = dtgArgs[i].replace(c.toString(), "");
-            }
-
-            dtgArgs[i] = dtgArgs[i].toUpperCase().trim();
-        }
-
-        try{
-
-            hour = Integer.parseInt(dtgArgs[3]);
-            minute = Integer.parseInt(dtgArgs[4]);
-
-            for(int i = 0; i < 3; i++) {
-                if(dtgArgs[i].contains("DAY")) {
-                    if(dtgArgs[i].contains("MON")) {
-                        day = 1;
-                    } else if (dtgArgs[i].contains("TUE")) {
-                        day = 2;
-                    } else if (dtgArgs[i].contains("WED")) {
-                        day = 3;
-                    } else if (dtgArgs[i].contains("THU")) {
-                        day = 4;
-                    } else if (dtgArgs[i].contains("FRI")) {
-                        day = 5;
-                    } else if (dtgArgs[i].contains("SAT")) {
-                        day = 6;
-                    } else if (dtgArgs[i].contains("SUN")) {
-                        day = 7;
-                    } else{
-                        if(dtgArgs[i].contains("JAN")) {
-                            month = Calendar.JANUARY;
-                        } else if(dtgArgs[i].contains("FEB")) {
-                            month = Calendar.FEBRUARY;
-                        } else if(dtgArgs[i].contains("MAR")) {
-                            month = Calendar.MARCH;
-                        } else if(dtgArgs[i].contains("APR")) {
-                            month = Calendar.APRIL;
-                        } else if(dtgArgs[i].contains("MAY")) {
-                            month = Calendar.MAY;
-                        } else if(dtgArgs[i].contains("JUN")) {
-                            month = Calendar.JUNE;
-                        } else if(dtgArgs[i].contains("JUL")) {
-                            month = Calendar.JULY;
-                        } else if(dtgArgs[i].contains("AUG")) {
-                            month = Calendar.AUGUST;
-                        } else if(dtgArgs[i].contains("SEP")) {
-                            month = Calendar.SEPTEMBER;
-                        } else if(dtgArgs[i].contains("OCT")) {
-                            month = Calendar.OCTOBER;
-                        } else if(dtgArgs[i].contains("NOV")) {
-                            month = Calendar.NOVEMBER;
-                        } else if(dtgArgs[i].contains("DEC")) {
-                            month = Calendar.DECEMBER;
-                        }
-                    }
-                }
-            }
-            year = Integer.parseInt(dtgArgs[0].substring(0, 4));
-        } catch (NumberFormatException _) {}
-
-
-        userCalendar.set(year, month, day, hour, minute);
-    }
     public boolean getStaus(){return running;}
     public void parseText(String input){
         userMessage = input;
@@ -228,18 +132,15 @@ public class Host implements Runnable{
 
     @Override
     public void run() {
-        String[] args = null;
+        String[] args;
         IO.println("SMS-GROCERY-LIST V1.0\n");
-
-        int parseCMD = -1;
-        String parseArgs = null;
 
         while(running){
             //String input = IO.readln("\nAwaiting User Input:\n");
             String input = userMessage;
             userMessage = null;
             StringBuilder tempString = new StringBuilder();
-            Packet pongPacket = null;
+            Packet pongPacket;
             if(input != null && !input.isEmpty()){
                 args = interpretInput(input);
                 int cmdArg = Integer.parseInt(args[0]);
@@ -266,33 +167,12 @@ public class Host implements Runnable{
                 }
             }
 
-            if (useTimeFunction && (timeThread == null || !timeThread.isAlive())) {
-                startTimeThread();
-            }
-
             try {
                 Thread.sleep(500); // latency to prevent new messages being prematurely written and sent
             } catch (InterruptedException _) {}
         }
     }
 
-    private void startTimeThread() {
-        timeThread = new Thread(() -> {
-            while (running && useTimeFunction) {
-                dateTime = ZonedDateTime.now();
-                ZonedDateTime target = userCalendar.toInstant().atZone(userCalendar.getTimeZone().toZoneId());
-                if (target != null) {
-                    parsePacket(new Packet(1, new String[]{}));
-                }
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    return;
-                }
-            }
-        });
-        timeThread.start();
-    }
     private String[] interpretInput(String input){
         input = input.toUpperCase();
         String[] dictionaryEnd = {"STOP", "KILL", "END"};
@@ -315,7 +195,6 @@ public class Host implements Runnable{
 
         int command = -1;
         String item = "";
-        int quantity = -1;
 
         ArrayList<String> args = new ArrayList<>(Arrays.asList(input.toUpperCase().split(" ")));
 
