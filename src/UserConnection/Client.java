@@ -1,3 +1,7 @@
+package userconnection;
+
+import exceptions.SidecarException;
+
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URI;
@@ -5,23 +9,14 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-public class Client implements Runnable{
-    private static final Host host = new Host();
+public class Client implements Runnable, SmsResponseListener{
+    private static Host host = null;
     private final String ENDPOINT = "http://127.0.0.1:5000";
     private final HttpClient httpClient = HttpClient.newHttpClient();
-    private String recipient = "+15312018112";
-    /* GitIgnore:
-      - 15159018781
-      - 14023057041
-      - 15312018112
-     */
-    public static void main(String[] args) {
-        Client client = new Client();
-        Thread clientThread = new Thread(client);
-        clientThread.start();
+    private String recipient = "+15312108112";
 
-        Thread hostThread = new Thread(host);
-        hostThread.start();
+    public static void setHost(Host host) {
+        Client.host = host;
     }
 
     @Override
@@ -106,7 +101,69 @@ public class Client implements Runnable{
         }
     }
 
-        return "";
+    private String receiveSMS() {
+        try{
+            Thread.sleep(5000); // prevents overworking the thread and Python client
+        } catch (InterruptedException _) {}
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(ENDPOINT + "/get-next-sms")) // calls the Python script
+                .GET()
+                .build();
+
+        try {
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new SidecarException("Python gateway responded with error status: " + response.statusCode());
+            }
+            return extractMessageBody(response.body());
+        } catch (IOException | InterruptedException e) {
+            throw new SidecarException("Failed to poll python script: " + e.getMessage());
+        }
+    }
+
+    private String extractMessageBody(String json) {
+        int key = json.indexOf("\"body\"");
+        if (key < 0)
+            return "";
+
+        int start = json.indexOf('"', json.indexOf(':', key) + 1);
+        if (start < 0)
+            return "";
+
+        StringBuilder body = new StringBuilder();
+
+        for (int i = start + 1; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (c == '"') break; // end of the string value
+            if (c == '\\' && i + 1 < json.length()) { // JSON escape
+                char n = json.charAt(++i);
+                switch (n) {
+                    case 'n' -> body.append('\n'); // new line
+                    case 't' -> body.append('\t'); // tab
+                    case 'r' -> body.append('\r'); // return
+                    case 'u' -> { // non-ASCII
+                        body.append((char) Integer.parseInt(json.substring(i + 1, i + 5), 16));
+                        i += 4;
+                    }
+                    default -> body.append(n); // \" and \\ and \/
+                }
+            } else {
+                body.append(c);
+            }
+        }
+
+        return body.toString();
+    }
+
+    @Override
+    public void onDataReceived(String data) {
+        try{
+            sendSMS(data);
+        } catch (Exception e){
+            IO.println(e.getMessage());
+        }
     }
 
 }

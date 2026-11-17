@@ -1,4 +1,12 @@
+package userconnection;
+
+import Data.Item;
+import Data.Packet;
+import exceptions.BadPacketException;
+import exceptions.SidecarException;
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
@@ -6,15 +14,17 @@ import java.time.ZonedDateTime;
 
 public class Host implements Runnable{
     private List<Item> groceries = new ArrayList<Item>();
+    private SmsResponseListener listener;
     private ZonedDateTime dateTime = ZonedDateTime.now();
     private Calendar userCalendar = Calendar.getInstance();
     private boolean useTimeFunction = true;
     private boolean running = true;
-    private String userMessage;
+    private volatile String userMessage;
 
     private Thread timeThread;
 
-    public Host(){
+    public Host(SmsResponseListener listener){
+        this.listener = listener;
         launchPythonSidecar();
     }
 
@@ -22,7 +32,7 @@ public class Host implements Runnable{
         // Directory is found this way since putting the directory in straight caused bugs
         String directory = System.getProperty("user.dir");
         String pythonPath = directory + File.separator + "Src" + File.separator
-                + "textnow_gateway" + File.separator + "textnowGateway.py";
+                + "userconnection/textnow_gateway" + File.separator + "textnowGateway.py";
 
         ProcessBuilder processBuilder = new ProcessBuilder("python", pythonPath);
         try {
@@ -35,7 +45,7 @@ public class Host implements Runnable{
             Thread.sleep(2500); // Python is slow to connect :/
 
         } catch (IOException e){
-            IO.println("Fatal Error: Unable to locate python file: textnowGateway.py, ensure the file directory is correct!");
+            throw new SidecarException("Fatal Error: Unable to locate python file: textnowGateway.py, ensure the file directory is correct!");
         } catch (InterruptedException e){
             Thread.currentThread().interrupt();
         } catch (Exception e){
@@ -55,6 +65,7 @@ public class Host implements Runnable{
                 IO.println("Goodbye!");
                 running = false;
                 timeThread.interrupt();
+                break;
             case 1: { // Get items
                 List<String> needed = new ArrayList<>();
                 for (Item item : groceries) {
@@ -68,7 +79,7 @@ public class Host implements Runnable{
                     // Old: SUCCESSFUL: NO ITEMS TO SHOW
                 } else {
                     argsReturn.add("Reminding you to buy: " + String.join(", ", needed) + ".");
-                    // Old: "Item: " + item.getName()
+                    // Old: "Data.Item: " + item.getName()
                 }
                 break;
             }
@@ -218,7 +229,7 @@ public class Host implements Runnable{
     @Override
     public void run() {
         String[] args = null;
-        IO.println("SMS-GROCERY-LIST V0.8 BY VINCENT DIMAIO TEST BUILD\n");
+        IO.println("SMS-GROCERY-LIST V0.9 TEST BUILD\n");
 
         int parseCMD = -1;
         String parseArgs = null;
@@ -226,6 +237,7 @@ public class Host implements Runnable{
         while(running){
             //String input = IO.readln("\nAwaiting User Input:\n");
             String input = userMessage;
+            userMessage = null;
             StringBuilder tempString = new StringBuilder();
             Packet pongPacket = null;
             if(input != null && !input.isEmpty()){
@@ -240,10 +252,13 @@ public class Host implements Runnable{
                 // for now args[0] is command args[1-...n] are args
                 try{
                     pongPacket = parsePacket(packet);
-                    // pongPacket will be in the future received by the client
-                    // exists this way for testing at the moment
+
+                    StringBuilder argsToParse = new StringBuilder();
                     for(String arg : pongPacket.args){
-                        IO.print(arg);
+                        argsToParse.append(arg);
+                    }
+                    if (listener != null) {
+                        listener.onDataReceived(argsToParse.toString());
                     }
                     //IO.println("END OF LINE");
                 } catch (BadPacketException e) {
@@ -254,6 +269,10 @@ public class Host implements Runnable{
             if (useTimeFunction && (timeThread == null || !timeThread.isAlive())) {
                 startTimeThread();
             }
+
+            try {
+                Thread.sleep(500); // latency to prevent new messages being prematurely written and sent
+            } catch (InterruptedException _) {}
         }
     }
 

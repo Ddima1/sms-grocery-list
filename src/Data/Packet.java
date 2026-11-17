@@ -1,3 +1,5 @@
+package Data;
+
 public class Packet {
     public final int ID;
     private static int nextID = 0;

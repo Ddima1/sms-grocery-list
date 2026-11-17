@@ -6,10 +6,11 @@
 
 import time
 import os
+import traceback
 from pythontextnow import Client
 from pythontextnow import ConversationService
 from pythontextnow.enum import MessageDirection
-from pythontextnow.model import TextMessage
+from pythontextnow.model.TextMessage import TextMessage
 from threading import Thread
 from flask import Flask, request, jsonify
 
@@ -20,13 +21,37 @@ CONNECT_SID = os.environ.get("TEXTNOW_SID", "").strip().replace('"', '').replace
 RECIPIENT_PHONE = os.environ.get("MONICA", "").strip() # format +1XXXXXXXXXX
 
 
-POLLING_ENABLED = False # Switch to true in v1.x
+POLLING_ENABLED = True # Switch to true in v1.x
 
 # Ensures python and java logs appear
 def log(*args):
     print(*args, flush=True)
 
 client_ready = False
+
+def patch_library_message_parsing():
+    try:
+        from pythontextnow.model import Message
+        if not isinstance(Message, type):  # got the module instead of the class, so grab the class inside it
+            Message = Message.Message
+
+        original_from_dict = Message.from_dict
+
+        def tolerant_from_dict(message_dict, *args, **kwargs):
+            if isinstance(message_dict, dict):
+                filtering = message_dict.get("conversation_filtering")
+                if not isinstance(filtering, dict):
+                    message_dict["conversation_filtering"] = {"first_time_contact": False}
+                else:
+                    filtering.setdefault("first_time_contact", False)
+            return original_from_dict(message_dict, *args, **kwargs)
+
+        Message.from_dict = staticmethod(tolerant_from_dict)
+        log("Applied compatibility patch for missing 'conversation_filtering'.")
+    except Exception as e:
+        log(f"Could not apply compatibility patch: {type(e).__name__}: {e!r}")
+
+patch_library_message_parsing()
 
 try:
     log(f"Attempting initialization for user: {USERNAME}...")
@@ -88,27 +113,39 @@ def send_sms():
 
 
 def poll_incoming_messages():
-    JAVA_WEBHOOK_URL = "http://127.0.0.1" # localhost
+    if not client_ready or not RECIPIENT_PHONE:
+        log("Polling disabled: client not initialized.")
+        return
+
+    conversation = get_conversation(RECIPIENT_PHONE)
+
+    last_error = None # only prints new errors
 
     while True:
         try:
-            unread_messages = client.get_unread()
-            if msg_id not in processed_message_ids: # Checks if the message has already been read
-                processed_message_ids.add(msg_id)
-                payload = { # JSON
-                    "sender": msg.number,
-                    "messageBody": msg.text
-                }
-                try:
-                    response = requests.post(JAVA_WEBHOOK_URL, json=payload, timeout=5) # timeout prevents hang errors
-                    if response.status_code == 200: # HTTP 200 OK
-                        msg.mark_as_read()
-                except Exception as java_err:
-                    print(f"Java endpoint offline. Postponing forward: {java_err}")
-                    processed_message_ids.remove(msg_id)
+            recent_messages = next(conversation.get_messages(num_messages=5), [])
+            for msg in recent_messages:
+                if msg.message_direction != MessageDirection.INCOMING or msg.read or not isinstance(msg, TextMessage):
+                    continue
+
+                msg_id = getattr(msg, 'id', None) or f"{getattr(msg, 'number', '')}_{getattr(msg, 'date_time', '')}_{msg.text}"
+
+                if msg_id not in processed_message_ids:
+                    processed_message_ids.add(msg_id)
+
+                    message_queue.append(msg.text)
+                    log(f"Intercepted message held in buffer: {msg.text}")
+
+                    conversation.mark_as_read(message=msg)
         except Exception as e:
-            pass
-            time.sleep(5)
+            error_text = f"{type(e).__name__}: {e!r}"
+            if error_text != last_error:
+                log(f"Poll error: {error_text}")
+                traceback.print_exc()
+                last_error = error_text
+        else:
+            last_error = None  # forgets errors if successful
+        time.sleep(5)
 
 if __name__ == '__main__':
     if POLLING_ENABLED:
