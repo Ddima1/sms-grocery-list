@@ -13,7 +13,7 @@ public class Client implements Runnable, SmsResponseListener{
     private static Host host = null;
     private final String ENDPOINT = "http://127.0.0.1:5000";
     private final HttpClient httpClient = HttpClient.newHttpClient();
-    private String recipient = "+15312108112";
+    private String recipient = System.getenv("MONICA");
 
     public static void setHost(Host host) {
         Client.host = host;

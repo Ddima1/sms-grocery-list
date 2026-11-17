@@ -1,6 +1,6 @@
 import static org.junit.jupiter.api.Assertions.*;
-import Data.Item;
-import Data.Packet;
+import data.Item;
+import data.Packet;
 import exceptions.BadPacketException;
 import userconnection.Host;
 import org.junit.jupiter.api.*;

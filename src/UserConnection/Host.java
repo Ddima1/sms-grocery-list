@@ -1,7 +1,7 @@
 package userconnection;
 
-import Data.Item;
-import Data.Packet;
+import data.Item;
+import data.Packet;
 import exceptions.BadPacketException;
 import exceptions.SidecarException;
 
@@ -229,7 +229,7 @@ public class Host implements Runnable{
     @Override
     public void run() {
         String[] args = null;
-        IO.println("SMS-GROCERY-LIST V0.9 TEST BUILD\n");
+        IO.println("SMS-GROCERY-LIST V1.0\n");
 
         int parseCMD = -1;
         String parseArgs = null;
