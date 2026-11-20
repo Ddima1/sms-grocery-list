@@ -35,7 +35,10 @@ User can access the shopping list from their phone via SMS and update it via SMS
 <img width="1022" height="812" alt="FlowchartSMSGroceryList drawio" src="https://github.com/user-attachments/assets/db4f7504-575a-4b8c-aeb4-49f42551ca4e" />
 
 Explanation of the flow chart: 
-For every message sent to TextNow, it requires a SID (login ID), Username, Recipient (+1XXXXXXXXXX), and a port—this is automatically assigned and is user ID + 5000. This is specified during setup on the server end. On boot, the Python sidecar is booted up and sends a boot-up message to the user and every 5000ms polls TextNow for a message. The client only reads the most recent message sent before replying.
+
+For every message sent to TextNow, it requires a SID (login ID), Username, Recipient (+1XXXXXXXXXX), and a port—this is automatically assigned and is user ID + 5000. This is specified during setup on the server end. On boot, the Python sidecar starts and sends a boot-up message to the user, and every 5000ms polls TextNow for a message. The client only reads the most recent message sent before replying.
+
 On polling message the sidecar sends this as a JSON to client.receiveSMS()  where it sends it as a packet with the user ID and body to the host. 
+
 The host then interprets the message and reparses it as a packet with a CMD ID and an argument (item to add/remove). The host then runs that command on the List. It then uses the user ID specified by the user to parse a message packet through the interface to the client, where the message body is parsed as JSON and sent back to the sidecar.
-The sidecar then parses the JSON for the recipient for that client, to the textNow Website, which sends a text to the user of the command.
+The sidecar then parses the JSON for that client's recipient and sends it to the textNow Website, which sends a text to the user of the command.
