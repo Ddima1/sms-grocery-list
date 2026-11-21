@@ -11,6 +11,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Processes SMS commands and maintains the shared grocery list.
+ *
+ * @author Vinnie Di Maio
+ * @version 1.1
+ * @since 11/04/2026
+ * @see userconnection.Client
+ */
 public class Host implements Runnable{
     private static List<Item> groceries = new ArrayList<>();
     private final SmsResponseListener[] listeners;
@@ -18,14 +26,32 @@ public class Host implements Runnable{
     private volatile String userMessage;
     private int userID = -1;
 
+    /**
+     * Creates a host with listener(s) for connected clients.
+     *
+     * @param listeners response listeners indexed by client identifier
+     */
     public Host(SmsResponseListener... listeners){
         this.listeners = listeners;
     }
 
+    /**
+     * Gets the grocery list.
+     *
+     * @return current grocery items
+     */
     public List<Item> getGroceries() {
         return groceries;
     }
 
+    /**
+     * Executes the command in a packet and creates a response packet.
+     *
+     * @param packet command packet to process
+     * @return response packet
+     * @throws exceptions.BadPacketException if the command identifier is unknown
+     * @throws NumberFormatException if a quantity argument is not numeric
+     */
     public Packet parsePacket(Packet packet) {
         ArrayList<String> argsReturn = new ArrayList<>();
         switch (packet.CMD) {
@@ -90,16 +116,35 @@ public class Host implements Runnable{
         }
         return new Packet(argsReturn.toArray(new String[0]));
     }
+    /**
+     * Adds a grocery item to the shared list.
+     *
+     * @param grocery item to add
+     */
     public void addGroceries(Object grocery) {
         if(grocery instanceof Item e)
             groceries.add(e);
     }
+    /**
+     * Gets whether the host remains active.
+     *
+     * @return true while the host is running
+     */
     public boolean getStaus(){return running;}
+    /**
+     * Stores text received from a client for processing.
+     *
+     * @param input packet containing a client identifier and message
+     * @throws NumberFormatException if the client identifier is not numeric
+     */
     public void parseText(Packet input) {
         userID = Integer.parseInt(input.args[0]);
         userMessage = input.args[1];
     }
 
+    /**
+     * Continuously processes stored client messages.
+     */
     @Override
     public void run() {
         String[] args;
@@ -143,6 +188,13 @@ public class Host implements Runnable{
         }
     }
 
+    /**
+     * Converts a normal language input into a command packet argument.
+     *
+     * @param input user message
+     * @return command identifier and parsed item arguments
+     * @throws RuntimeException if the grocery dictionary cannot be read
+     */
     private String[] interpretInput(String input){
         input = input.toUpperCase();
         String[] dictionaryEnd = {"STOP", "KILL", "END"};
@@ -215,6 +267,11 @@ public class Host implements Runnable{
         return argsReturn;
     }
 
+    /**
+     * Replaces the shared grocery list.
+     *
+     * @param groceries new grocery items
+     */
     public void setGroceries(List<Item> groceries) {
         Host.groceries = groceries;
     }
