@@ -1,4 +1,4 @@
-# sms-grocery-list
+# SMS Grocery List
 
 ## PROBLEM
 When I run out of something, I forget to write it down to buy. For instance, if I run out of Orange Juice, I often forget to buy more, and then when I go to the grocery store, I either have to spend time making a list (which I often don't do) or hope I remember.
