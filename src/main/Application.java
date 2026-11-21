@@ -1,3 +1,5 @@
+package main;
+
 import userconnection.Client;
 import userconnection.Host;
 
