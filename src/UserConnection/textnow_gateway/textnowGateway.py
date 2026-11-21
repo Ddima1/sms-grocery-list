@@ -1,9 +1,22 @@
-# Note to future me and anyone who views this code:
-# As of 11/10/2026 (When this code is written) this is the first time I touched python in over a year
-# Please bear with me if this code is bad <3
-# Also don't mind the excess comments. It is for my use to inline document, will be removed in final build.
-# Referenced https://pypi.org/project/PyTextNow/ & https://github.com/joeyagreco/pythontextnow in writing
+"""
+Local sidecar that sends and receives TextNow SMS messages for the sms-grocery-list application.
 
+The TextNow account and gateway are configured by the ``TEXTNOW_USERNAME``,
+``TEXTNOW_SID``, ``RECIPIENT_PHONE``, and ``PORT`` environment variables.
+``PORT`` defaults to 5000 -- this is user at index 0 in context.
+
+The server listens only on 127.0.0.1 and provides POST /send for outbound messages and GET
+/get-next-sms for retrieving queued inbound messages. A background polling thread checks the
+configured recipient's conversation every five seconds when polling is enabled.
+
+Author: Vinnie Di Maio
+Version: 1.1
+Created: 11/10/2026
+
+References:
+    https://pypi.org/project/PyTextNow/
+    https://github.com/joeyagreco/pythontextnow
+"""
 import time
 import os
 import traceback
@@ -24,13 +37,28 @@ PORT = int(os.environ.get("PORT", "5000"))
 
 POLLING_ENABLED = True # Switch to true in v1.x
 
-# Ensures python and java logs appear
 def log(*args):
+    """
+    Writes flushed log line to standard output.
+
+    Values are passed directly to print so the Python sidecar's messages
+    appear promptly in the Java process's inherited console output.
+
+    Args:
+        *args: Objects to print, separated by spaces and converted to strings
+            using print's normal behavior.
+    """
     print(*args, flush=True)
 
 client_ready = False
 
 def patch_library_message_parsing():
+    """
+    Installs a compatibility wrapper around PyTextNow's "Message.from_dict".
+
+    The wrapper ensures each dictionary has a dictionary-valued conversation_filtering field and that this field
+    contains first_time_contact (default: False). It then delegates parsing to the original method.
+    """
     try:
         from pythontextnow.model import Message
         if not isinstance(Message, type):  # got the module instead of the class, so grab the class inside it
@@ -39,6 +67,26 @@ def patch_library_message_parsing():
         original_from_dict = Message.from_dict
 
         def tolerant_from_dict(message_dict, *args, **kwargs):
+            """
+            Adds missing conversation-filtering metadata before parsing a message.
+
+
+            If message_dict is a dictionary, this function modifies it in
+            place. A missing or non-dictionary conversation_filtering value
+            is replaced with {"first_time_contact": False}.Other input values
+            are passed to the original unchanged.
+
+            Args:
+                message_dict: Message data supplied to PyTextNow's parser.
+                *args: Additional positional arguments forwarded unchanged.
+                **kwargs: Additional keyword arguments forwarded unchanged.
+
+            Returns:
+                The result returned by the original Message.from_dict function.
+
+            Raises:
+                Any exception raised by the original implementation.
+            """
             if isinstance(message_dict, dict):
                 filtering = message_dict.get("conversation_filtering")
                 if not isinstance(filtering, dict):
@@ -71,6 +119,19 @@ except Exception as e:
 conversations = {}
 
 def get_conversation(phone_number):
+    """
+    Gets the conversation for a phone number
+
+    Args:
+        phone_number: TextNow phone number
+
+    Returns:
+        The cached or newly created ConversationService for the recipient's phone number.
+
+    Raises:
+        Any exception raised by ConversationService while creating the
+        conversation.
+    """
     if phone_number not in conversations:
         conversations[phone_number] = ConversationService(conversation_phone_numbers=[phone_number])
     return conversations[phone_number]
@@ -81,6 +142,13 @@ message_queue = []
 
 @app.route('/get-next-sms', methods=['GET'])
 def get_next_sms():
+    """
+    Dequeues one incoming SMS for the Java client in FIFO order.
+
+    Returns:
+        A JSON response with HTTP 200 and with a body string. The contains the oldest queued SMS,
+        or is empty when the queue is empty.
+    """
     if len(message_queue) > 0:
         latest_text = message_queue.pop(0)  #  shifts the queue
         return jsonify({"body": latest_text})
@@ -88,6 +156,20 @@ def get_next_sms():
 
 @app.route('/send', methods=['POST'])
 def send_sms():
+    """
+
+    Validates and sends a message through TextNow.
+
+    Request JSON:
+        to: Non-empty recipient phone number string.
+        body: Non-empty SMS message text string.
+
+    Returns:
+        On success, a Flask JSON response with HTTP 200 and
+        "{"status": "success", "message": "SMS dispatched successfully"}".
+
+        Missing or empty body shows a JSON error message.
+    """
     if not client_ready: # Checks connection to TextNow host
         return jsonify({"status": "error", "message": "TextNow client not initialized"}), 500
 
@@ -114,6 +196,15 @@ def send_sms():
 
 
 def poll_incoming_messages():
+    """
+    Continuously polls TextNow for unread incoming text messages.
+
+    Each poll requests up to five recent messages by the user. Each unseen incoming message is identified by its
+    message ID, or
+    by a fallback from its number, timestamp, and text. Marks the text as "read".
+    The loop polls every 5000ms/5 seconds. Identical poll errors are logged only once until a successful poll
+    resets the error state.
+    """
     if not client_ready or not RECIPIENT_PHONE:
         log("Polling disabled: client not initialized.")
         return
