@@ -245,7 +245,7 @@ public class Client implements Runnable, SmsResponseListener {
     private void launchPythonSidecar() {
         // Directory is found this way since putting the directory in straight caused bugs
         String directory = System.getProperty("user.dir");
-        String pythonPath = directory + File.separator + "src" + File.separator
+        String pythonPath = directory + File.separator + "main" + File.separator
                 + "userconnection/textnow_gateway" + File.separator + "textnowGateway.py";
 
         ProcessBuilder processBuilder = new ProcessBuilder("python", pythonPath);

@@ -3,7 +3,21 @@ import userconnection.Host;
 
 import java.util.ArrayList;
 
+/**
+ * Starts the SMS grocery-list application and configures its clients and host.
+ *
+ * @author Vinnie Di Maio
+ * @version 1.1
+ * @since 11/16/2026
+ * @see userconnection.Client
+ * @see userconnection.Host
+ */
 public class Application {
+    /**
+     * Collects setup values, creates the clients and host, and starts the processing threads.
+     *
+     * @param args command-line arguments
+     */
     public static void main(String[] args) {
         IO.println("Welcome to SMS Grocery List!\nBe sure to look at the README!");
 
