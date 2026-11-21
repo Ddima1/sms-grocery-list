@@ -11,6 +11,14 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+/**
+ * Manages SMS polling and sending for one recipient through a Python sidecar.
+ *
+ * @author Vinnie Di Maio
+ * @version 1.1
+ * @since 11/05/2026
+ * @see userconnection.Host
+ */
 public class Client implements Runnable, SmsResponseListener {
     private static int clients = 0;
     private static final int BASE_PORT = 5000;
@@ -25,6 +33,14 @@ public class Client implements Runnable, SmsResponseListener {
     private final String sid;
     private final String username;
 
+    /**
+     * Creates a client and launches its gateway sidecar.
+     *
+     * @param recipient recipient phone number
+     * @param sid TextNow session identifier
+     * @param username TextNow account username
+     * @throws exceptions.SidecarException if the sidecar cannot be started
+     */
     public Client(String recipient, String sid, String username) {
         this.clientID = clients;
         this.port = BASE_PORT + clientID;
@@ -36,10 +52,18 @@ public class Client implements Runnable, SmsResponseListener {
         clients++;
     }
 
+    /**
+     * Associates this client with its host.
+     *
+     * @param host host that processes received messages
+     */
     public void setHost(Host host) {
         this.host = host;
     }
 
+    /**
+     * Sends welcome messages and continuously polls for incoming SMS messages every 5000ms.
+     */
     @Override
     public void run() {
         try {
@@ -75,6 +99,14 @@ public class Client implements Runnable, SmsResponseListener {
         }
     }
 
+    /**
+     * Sends an SMS message through the local Python gateway/sidecar.
+     *
+     * @param messageBody text to send
+     * @throws IOException if the HTTP request cannot be sent
+     * @throws InterruptedException if the sending thread is interrupted
+     * @throws exceptions.SidecarException if the gateway returns an error or cannot be reached
+     */
     private void sendSMS(String messageBody) throws IOException, InterruptedException {
         int maxRetries = 5;
         int retries = 0;
@@ -123,6 +155,12 @@ public class Client implements Runnable, SmsResponseListener {
         }
     }
 
+    /**
+     * Polls the gateway for the next SMS message.
+     *
+     * @return the received message body, or an empty string
+     * @throws exceptions.SidecarException if polling or JSON processing fails
+     */
     private String receiveSMS() {
         try{
             Thread.sleep(5000); // prevents overworking the thread and Python client
@@ -145,6 +183,12 @@ public class Client implements Runnable, SmsResponseListener {
         }
     }
 
+    /**
+     * Extracts a message body from a gateway JSON response.
+     *
+     * @param json gateway response JSON
+     * @return extracted message body
+     */
     private String extractMessageBody(String json) {
         int key = json.indexOf("\"body\"");
         if (key < 0)
@@ -179,6 +223,11 @@ public class Client implements Runnable, SmsResponseListener {
         return body.toString();
     }
 
+    /**
+     * Sends data received from the host to the SMS recipient.
+     *
+     * @param data response packet to send
+     */
     @Override
     public void onDataReceived(Packet data) {
         try{
@@ -188,6 +237,11 @@ public class Client implements Runnable, SmsResponseListener {
         }
     }
 
+    /**
+     * Starts the Python gateway process for this client.
+     *
+     * @throws exceptions.SidecarException if the gateway cannot be located or started
+     */
     private void launchPythonSidecar() {
         // Directory is found this way since putting the directory in straight caused bugs
         String directory = System.getProperty("user.dir");
