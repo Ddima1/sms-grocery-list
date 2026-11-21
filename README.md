@@ -4,7 +4,7 @@
 When I run out of something, I forget to write it down to buy. For instance, if I run out of Orange Juice, I often forget to buy more, and then when I go to the grocery store, I either have to spend time making a list (which I often don't do) or hope I remember.
 
 ## SOLUTION
-A Java program that writes to a text file and, on a set date, texts you when you ask it; you can then clear it from your device/terminal when you no longer need it. You can add or remove an item to be reminded on the same device. Texting is the primary way to communicate with the device.
+A program that can store and text you a grocery list. It should allow you to update, add, and remove items, as well as retrieve it.
 
 Requirements:
 - Languages: Java 26.0.2.1 and Python 3.15.2 -- Most recent should work.
@@ -24,10 +24,7 @@ V1.1 and beyond:
 - Poll the thesaurus for interpret command
 - Poll from the internet/shopping website for groceries.
 
-IMPORTANT & URGENT: Store List, Update List, Get List via phone
-NOT IMPORTANT & URGENT: Lists can be searched and sorted; the whole list can be shown, including items not needed to be shown
-IMPORTANT & NOT URGENT: Other users can update one greater list
-NOT IMPORTANT & NOT URGENT: Access via a website, visual aids
+<img width="584" height="539" alt="EisenhowerMatrixSMSGroceryList drawio" src="https://github.com/user-attachments/assets/d6830b7e-7faf-44db-8c95-a457d1dc1bb0" />
 
 ## EXPLANATION
 User can access the shopping list from their phone via SMS and update it via SMS. Allows for multiple client connections per host as of V1.1.
