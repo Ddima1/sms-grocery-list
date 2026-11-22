@@ -17,7 +17,8 @@ V1.0:
 - Can update an item's inStock status
 - Can add/remove items from a list
 - Can text the list to a user
-- User can text the program -- SMS is a console
+- User can text the program -- SMS is a console 
+
 V1.1 and beyond:
 - Multiple Clients can connect
 - Output at a specified date and time
