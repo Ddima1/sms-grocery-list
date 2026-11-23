@@ -39,7 +39,7 @@ To find your username, go to Settings and it should be displayed.
 
 To find your SID on your browser, inspect element, go to "Storage" and copy the value of "connect.sid"
 
-
+<img width="1917" height="997" alt="image" src="https://github.com/user-attachments/assets/89628faa-e8f5-4889-af49-03879bc99e3d" />
 
 ## EXPLANATION OF PROGRAM
 User can access the shopping list from their phone via SMS and update it via SMS. Allows for multiple client connections per host as of V1.1.
