@@ -33,16 +33,16 @@ V1.1 and beyond:
 
 ## HOW TO GET SID AND USERNAME
 
-All of these must be done on the website. You must wait 1-7 days if you are unable to send messages from the website.
+All of these must be done on the website. You must wait 1-7 days if you can't send messages from the website.
 
-To find your username, go to Settings, and it should be displayed.
+To find your username, go to Settings; it should be displayed there.
 
-To find your SID on your browser, inspect element, go to "Storage" and copy the value of "connect.sid"
+To find your SID in your browser, inspect element, go to "Storage," and copy the value of "connect.sid".
 
 <img width="1917" height="997" alt="image" src="https://github.com/user-attachments/assets/89628faa-e8f5-4889-af49-03879bc99e3d" />
 
 ## EXPLANATION OF PROGRAM
-User can access the shopping list from their phone via SMS and update it via SMS. Allows for multiple client connections per host as of V1.1.
+Users can access the shopping list from their phone via SMS and update it via SMS. Allows for multiple client connections per host as of V1.1.
 
 <img width="1022" height="812" alt="FlowchartSMSGroceryList drawio" src="https://github.com/user-attachments/assets/db4f7504-575a-4b8c-aeb4-49f42551ca4e" />
 
@@ -54,7 +54,7 @@ automatically assigned and is user ID + 5000. This is specified during setup on 
 sidecar starts and sends a boot-up message to the user, and every 5000ms polls TextNow for a message. The client 
 only reads the most recent message sent before replying.
 
-On polling message the sidecar sends this as a JSON to client.receiveSMS()  where it sends it as a packet with the 
+On polling for a message, the sidecar sends this as JSON to client.receiveSMS(),  where it sends it as a packet with the 
 user ID and body to the host. 
 
 The host then interprets the message and reparses it as a packet with a CMD ID and an argument (item to add/remove). 
