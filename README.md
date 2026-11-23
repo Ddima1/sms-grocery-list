@@ -1,7 +1,9 @@
 # SMS Grocery List
 
 ## PROBLEM
-When I run out of something, I forget to write it down to buy. For instance, if I run out of Orange Juice, I often forget to buy more, and then when I go to the grocery store, I either have to spend time making a list (which I often don't do) or hope I remember.
+When I run out of something, I forget to write it down to buy. For instance, if I run out of Orange Juice, I often 
+forget to buy more. Then when I go to the grocery store, I either have to spend time making a list or hope I 
+remember--often I do the latter.
 
 ## SOLUTION
 A program that can store and text you a grocery list. It should allow you to update, add, and remove items, as well as retrieve it.
@@ -27,6 +29,11 @@ V1.1 and beyond:
 
 <img width="584" height="539" alt="EisenhowerMatrixSMSGroceryList drawio" src="https://github.com/user-attachments/assets/d6830b7e-7faf-44db-8c95-a457d1dc1bb0" />
 
+
+## HOW TO GET SID AND USERNAME
+
+
+
 ## EXPLANATION
 User can access the shopping list from their phone via SMS and update it via SMS. Allows for multiple client connections per host as of V1.1.
 
@@ -34,7 +41,9 @@ User can access the shopping list from their phone via SMS and update it via SMS
 
 Explanation of the flow chart: 
 
-For every message sent to TextNow, it requires a SID (login ID), Username, Recipient (+1XXXXXXXXXX), and a port—this is automatically assigned and is user ID + 5000. This is specified during setup on the server end. On boot, the Python sidecar starts and sends a boot-up message to the user, and every 5000ms polls TextNow for a message. The client only reads the most recent message sent before replying.
+For every message sent to TextNow, it requires a SID (Session ID), Username, Recipient (+1XXXXXXXXXX), and a 
+port—this is 
+automatically assigned and is user ID + 5000. This is specified during setup on the server end. On boot, the Python sidecar starts and sends a boot-up message to the user, and every 5000ms polls TextNow for a message. The client only reads the most recent message sent before replying.
 
 On polling message the sidecar sends this as a JSON to client.receiveSMS()  where it sends it as a packet with the user ID and body to the host. 
 

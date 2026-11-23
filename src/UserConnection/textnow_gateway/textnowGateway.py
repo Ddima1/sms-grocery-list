@@ -166,7 +166,7 @@ def send_sms():
 
     Returns:
         On success, a Flask JSON response with HTTP 200 and
-        "{"status": "success", "message": "SMS dispatched successfully"}".
+        " {"status": "success", "message": "SMS dispatched successfully"} ".
 
         Missing or empty body shows a JSON error message.
     """
