@@ -10,6 +10,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Paths;
 
 /**
  * Manages SMS polling and sending for one recipient through a Python sidecar.
@@ -245,8 +246,8 @@ public class Client implements Runnable, SmsResponseListener {
     private void launchPythonSidecar() {
         // Directory is found this way since putting the directory in straight caused bugs
         String directory = System.getProperty("user.dir");
-        String pythonPath = directory + File.separator + "main" + File.separator
-                + "userconnection/textnow_gateway" + File.separator + "textnowGateway.py";
+        String pythonPath = Paths.get(System.getProperty("user.dir"), "src", "main",
+                "userconnection", "textnow_gateway", "textnowGateway.py").toString();
 
         ProcessBuilder processBuilder = new ProcessBuilder("python", pythonPath);
         processBuilder.environment().put("RECIPIENT_PHONE", recipient);
